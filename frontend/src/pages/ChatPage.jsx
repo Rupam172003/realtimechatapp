@@ -96,7 +96,14 @@ export default function ChatPage() {
     setText('');
     setSending(true);
     try {
-      await api.sendMessage(selectedUser.id, trimmed);
+      const res = await api.sendMessage(selectedUser.id, trimmed);
+      if (res && res.message) {
+        setMessages(prev => {
+          const exists = prev.some(m => m.id === res.message.id || m.id === res.message._id);
+          if (exists) return prev;
+          return [...prev, res.message];
+        });
+      }
     } catch (err) {
       console.error(err);
       setText(trimmed);
@@ -122,7 +129,7 @@ export default function ChatPage() {
   }, []);
 
   return (
-    <div className="chat-layout">
+    <div className={`chat-layout ${selectedUser ? 'user-selected' : ''}`}>
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
@@ -179,6 +186,9 @@ export default function ChatPage() {
         ) : (
           <>
             <div className="chat-header">
+              <button className="btn-back mobile-only" onClick={() => setSelectedUser(null)} title="Back">
+                ←
+              </button>
               <Avatar user={selectedUser} size={40} />
               <div>
                 <div className="name">{selectedUser.name}</div>
